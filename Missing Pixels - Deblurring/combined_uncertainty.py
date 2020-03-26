@@ -208,7 +208,7 @@ class autoencoder():
                 axes[i,2].imshow(output_imgs[i].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
                 if i==0:
                     axes[i,2].set_title("reconstructed")
-                cb = axes[i,3].imshow(var[i],'gray')
+                cb = axes[i,3].imshow(var[i],'jet')
                 if i==0:
                     axes[i,3].set_title("combined")
             fig.colorbar(cb,ax=axes[:,3],location="right")
@@ -220,7 +220,7 @@ class autoencoder():
             axes[1].set_title("masked")
             axes[2].imshow(output_imgs[0].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
             axes[2].set_title("reconstructed")
-            cb = axes[3].imshow(var[0],'gray')#,vmin=0,vmax=1)
+            cb = axes[3].imshow(var[0],'jet')#,vmin=0,vmax=1)
             axes[3].set_title("combined")
             fig.colorbar(cb, ax=axes,shrink=0.2,location="right")
 
