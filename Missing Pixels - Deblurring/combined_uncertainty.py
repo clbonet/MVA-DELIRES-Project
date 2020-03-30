@@ -60,26 +60,6 @@ class autoencoder():
             log_noise = Reshape((self.img_rows,self.img_cols,1),name="noise")(Dense(784,activation="relu")(noise))
             output_img = Reshape((self.img_rows,self.img_cols,1))(Dense(784,activation='sigmoid')(z))
 
-        if (self.architecture == 'mlp2'):
-            # FULLY CONNECTED (MLP)
-
-            #BEGIN INSERT CODE
-            #encoder
-            input_img = Input(shape=(self.img_rows,self.img_cols,self.img_channels))
-            x_flatten = Flatten()(input_img)
-            x_flatten = Dense(512,activation=LeakyReLU(0.2),kernel_regularizer=l2(1/self.img_size))(x_flatten)
-            x_flatten = Dropout(0.2)(x_flatten,training=True)
-            x_flatten = Dense(256,activation=LeakyReLU(0.2),kernel_regularizer=l2(1/self.img_size))(x_flatten)
-            x_flatten = Dropout(0.2)(x_flatten,training=True)
-            z = Dense(self.z_dim,activation=LeakyReLU(0.2),kernel_regularizer=l2(1/self.img_size))(x_flatten)
-            #decoder
-            z = Dense(256,activation=LeakyReLU(0.2),kernel_regularizer=l2(1/self.img_size))(z)
-            z = Dropout(0.2)(z,training=True)
-            z = Dense(512,activation=LeakyReLU(0.2),kernel_regularizer=l2(1/self.img_size))(z)
-            z = Dropout(0.2)(z,training=True)
-            log_noise = Reshape((self.img_rows,self.img_cols,1),name="noise")(Dense(784,activation='relu')(z))
-            output_img = Reshape((self.img_rows,self.img_cols,1))(Dense(784,activation='sigmoid',name="test")(z))
-
         #output the model
         model_training = Model(input_img, output_img)
         model_training.compile(optimizer="adadelta",loss=self.custom_loss(log_noise))
@@ -90,8 +70,6 @@ class autoencoder():
 
     def custom_loss(self,log_noise):
         def loss(y_true,y_pred):
-            # out = K.sum(0.5*K.sum(K.square(y_true-y_pred))*K.exp(-log_noise),axis=0)/self.img_size
-            # out += K.sum(0.5*log_noise)/self.img_size
             out = K.sum(0.5*K.square(y_true-y_pred)*K.exp(-log_noise)+0.5*log_noise)/self.img_size
             return out
         return loss
