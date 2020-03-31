@@ -14,6 +14,8 @@ import matplotlib.pyplot as plt
 import cv2
 import sys
 
+from utils import *
+
 class NN():
     def __init__(self,epochs=200):
         self.epochs = epochs
@@ -56,43 +58,24 @@ class NN():
         
     def test_img(self,img_name="./Test/Set14/flowers.bmp",load_weights=None):
         srcnn_model = self.nn_test
-        
+
         if load_weights:
             srcnn_model.load_weights(load_weights)
         else:
             srcnn_model.set_weights(self.nn_train.get_weights())
-            
-        IMG_NAME = img_name
-        INPUT_NAME = "input.jpg"
-        OUTPUT_NAME = "output.jpg"
 
-        img = cv2.imread(IMG_NAME, cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb) ## BGR to YcrCb
-        shape = img.shape
-        Y_img = cv2.resize(img[:, :, 0], (shape[1] // 2, shape[0] // 2), cv2.INTER_CUBIC)
-        Y_img = cv2.resize(Y_img, (shape[1], shape[0]), cv2.INTER_CUBIC)
-        img[:, :, 0] = Y_img
-        img = cv2.cvtColor(img, cv2.COLOR_YCrCb2BGR)
-        cv2.imwrite(INPUT_NAME, img)
-        
+        img,Y_img = subsample(img_name)
+
         fig,ax = plt.subplots(1,2,figsize=(20,20))
 
-        ax[0].imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        ax[0].imshow(img)
+        ax[0].set_title("original")
 
-        Y = np.zeros((1, img.shape[0], img.shape[1], 1), dtype=float)
-        Y[0, :, :, 0] = Y_img.astype(float) / 255.
-        pre = srcnn_model.predict(Y, batch_size=1) * 255.
-        pre[pre[:] > 255] = 255
-        pre[pre[:] < 0] = 0
-        pre = pre.astype(np.uint8)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
-        img[6: -6, 6: -6, 0] = pre[0, :, :, 0]
-        img = cv2.cvtColor(img, cv2.COLOR_YCrCb2BGR)
+        img_x2 = predict(img,Y_img,srcnn_model)
 
-        ax[1].imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        ax[1].imshow(img_x2)
+        ax[1].set_title("x2")
         plt.show()
-
-        cv2.imwrite(OUTPUT_NAME, img)
 
     def test_epistemic(self,img_name="./Test/Set14/flowers.bmp",load_weights=None):
         srcnn_model = self.nn_test
@@ -102,55 +85,26 @@ class NN():
         else:
             srcnn_model.set_weights(self.nn_train.get_weights())
             
-        IMG_NAME = img_name
-        INPUT_NAME = "input.jpg"
-        OUTPUT_NAME = "output.jpg"
+        img,Y_img = subsample(img_name)
 
-        img = cv2.imread(IMG_NAME, cv2.IMREAD_COLOR)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb) ## BGR to YcrCb
-        shape = img.shape
-        Y_img = cv2.resize(img[:, :, 0], (shape[1] // 2, shape[0] // 2), cv2.INTER_CUBIC)
-        Y_img = cv2.resize(Y_img, (shape[1], shape[0]), cv2.INTER_CUBIC)
-        img[:, :, 0] = Y_img
-        img_original = cv2.cvtColor(img, cv2.COLOR_YCrCb2BGR)
-        img = img_original.copy()
-        cv2.imwrite(INPUT_NAME, img)
-        
         fig,ax = plt.subplots(1,3,figsize=(20,20))
-        ax[0].imshow(cv2.cvtColor(img_original, cv2.COLOR_BGR2RGB))
+
+        ax[0].imshow(img)
         ax[0].set_title("original")
 
-        Y = np.zeros((1, img.shape[0], img.shape[1], 1), dtype=float)
-        Y[0, :, :, 0] = Y_img.astype(float) / 255.
-        pre = srcnn_model.predict(Y, batch_size=1) * 255.
-        pre[pre[:] > 255] = 255
-        pre[pre[:] < 0] = 0
-        pre = pre.astype(np.uint8)
-        img = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
-        img[6: -6, 6: -6, 0] = pre[0, :, :, 0]
-        img = cv2.cvtColor(img, cv2.COLOR_YCrCb2BGR)
+        img_x2 = predict(img,Y_img,srcnn_model)
 
-        ax[1].imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+        ax[1].imshow(img_x2)
         ax[1].set_title("x2")
-
         
         T = 30
         var = np.zeros(img.shape)
         Ey = np.zeros(img.shape)
         
-        for k in range(T):       
-            Y = np.zeros((1, img.shape[0], img.shape[1], 1), dtype=float)
-            Y[0, :, :, 0] = Y_img.astype(float) / 255.
-            pre = srcnn_model.predict(Y, batch_size=1) * 255.
-            pre[pre[:] > 255] = 255
-            pre[pre[:] < 0] = 0
-            pre = pre.astype(np.uint8)
-            img = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb)
-            img[6: -6, 6: -6, 0] = pre[0, :, :, 0]
-            img = cv2.cvtColor(img, cv2.COLOR_YCrCb2RGB)
-            
-            var += (img/255)**2/T
-            Ey += img/(T*255)
+        for k in range(T):            
+            img_pred = predict(img,Y_img,srcnn_model)
+            var += (img_pred/255)**2/T
+            Ey += img_pred/(T*255)
             
         var -= Ey**2
         
@@ -172,8 +126,6 @@ class NN():
         
         fig.savefig("./var-rgb")
         plt.show()
-        
-        cv2.imwrite(OUTPUT_NAME, img)
 
 
 
