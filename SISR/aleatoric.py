@@ -203,8 +203,10 @@ if __name__ == "__main__":
     if(len(sys.argv)==1):
         model.train()
         model.test_img()
-        model.test()
+        model.test_aleatoric()
+        model.test_epistemic()
     else:
         model.test_img(load_weights=True)
-        model.test(load_weights=True)
+        model.test_aleatoric(load_weights=True)
+        model.test_epistemic(load_weights=True)
 

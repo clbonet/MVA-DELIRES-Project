@@ -131,13 +131,13 @@ class NN():
 
 if __name__ == "__main__":
     
-    model = NN()
+    model = NN(400)
 
     if(len(sys.argv)==1):
         model.train()
         model.test_img()
-        model.test()
+        model.test_epistemic()
     else:
         model.test_img(load_weights=True)
-        model.test(load_weights=True)
+        model.test_epistemic(load_weights=True)
 
