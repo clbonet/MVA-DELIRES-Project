@@ -57,6 +57,12 @@ class NN():
         self.nn_train.save_weights("srcnn_dropout.h5")
         
     def test_img(self,img_name="./Test/Set14/flowers.bmp",load_weights=None):
+        """
+            Apply the model on img_name
+
+            Can load some weights if load_weights != None 
+            (load_weights='./models/srcnn_epistemic') for example
+        """
         srcnn_model = self.nn_test
 
         if load_weights:
@@ -78,6 +84,12 @@ class NN():
         plt.show()
 
     def test_epistemic(self,img_name="./Test/Set14/flowers.bmp",load_weights=None):
+        """
+            Epistemic uncertainty on img_name
+
+            Can load some weights if load_weights != None 
+            (load_weights='./models/srcnn_epistemic') for example
+        """
         srcnn_model = self.nn_test
         
         if load_weights:
@@ -100,7 +112,7 @@ class NN():
         T = 30
         var = np.zeros(img.shape)
         Ey = np.zeros(img.shape)
-        
+        ## Predictive variance
         for k in range(T):            
             img_pred = predict(img,Y_img,srcnn_model)
             var += (img_pred/255)**2/T

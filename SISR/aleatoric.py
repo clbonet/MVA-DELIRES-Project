@@ -73,6 +73,12 @@ class NN():
         self.nn_train.save_weights("srcnn_dropout.h5")
 
     def test_img(self,img_name="./Test/Set14/flowers.bmp",load_weights=None):
+        """
+            Apply the model on img_name
+
+            Can load some weights if load_weights != None 
+            (load_weights='./models/srcnn_epistemic') for example
+        """
         srcnn_model = self.nn_test
 
         if load_weights:
@@ -93,7 +99,12 @@ class NN():
 
 
     def test_combined(self,img_name="./Test/Set14/flowers.bmp",load_weights=None):
-                
+        """
+            Combined uncertainty on img_name
+
+            Can load some weights if load_weights != None 
+            (load_weights='./models/srcnn_epistemic') for example
+        """
         self.noiseModel = Model(inputs=self.nn_test.input,outputs=self.model_out.get_layer("noise").output)
         
         srcnn_model = self.nn_test
@@ -118,7 +129,7 @@ class NN():
         T = 30
         var = np.zeros(img.shape)
         Ey = np.zeros(img.shape)
-        
+        ## Compute predictive variance
         for k in range(T):       
             img_pred = predict(img,Y_img,srcnn_model)
             
@@ -149,10 +160,14 @@ class NN():
         
         fig.savefig("./var-rgb")
         plt.show()
-        
-#         cv2.imwrite(OUTPUT_NAME, img)
 
     def test_aleatoric(self,img_name="./Test/Set14/flowers.bmp",load_weights=None):
+        """
+            Aleatoric Uncertainty on img_name
+
+            Can load some weights if load_weights != None 
+            (load_weights='./models/srcnn_epistemic') for example
+        """
         srcnn_model = self.nn_test
         
         if load_weights:
@@ -172,8 +187,9 @@ class NN():
         ax[1].imshow(img_x2)
         ax[1].set_title("x2")
         
+        ## Aleatoric model
         self.noiseModel = Model(inputs=self.nn_test.input,outputs=self.model_out.get_layer("noise").output)
-        
+        ## Aleatoric Uncertainty
         noise = predict(img,Y_img,self.noiseModel)/255
         
         cb = ax[2].imshow(noise[:,:,0]+noise[:,:,1]+noise[:,:,2],"jet")

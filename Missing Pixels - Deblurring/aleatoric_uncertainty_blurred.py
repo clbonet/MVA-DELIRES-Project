@@ -102,13 +102,7 @@ class autoencoder():
         #load dataset
         X_train,X_test = self.load_data(self.dataset_name)
 
-        sigma = 20.0/255.0 # 40.0/255.0
-
         for i in range(0,epochs):
-
-            # ---------------------
-            #  Autoencoder
-            # ---------------------
 
             # Select a random batch of images
             idx = np.random.randint(0, X_train.shape[0], batch_size)
@@ -135,7 +129,7 @@ class autoencoder():
 
     def test_images(self, test_imgs, image_filename):
         n_images = test_imgs.shape[0]
-        #get output imagesq
+        #get output images
         curr_batch_blurred = np.zeros(test_imgs.shape)
         for ind,img in enumerate(test_imgs):
             curr_batch_blurred[ind] = image_blur(img).reshape(self.img_rows,self.img_cols,1)
@@ -166,10 +160,9 @@ if __name__ == '__main__':
 
     #choose dataset
     dataset_name = 'mnist'
-    # dataset_name = 'cifar'
 
     #create AE model
-    architecture = 'mlp' #'convolutional'
+    architecture = 'mlp'
 
     ae = autoencoder(dataset_name,architecture)
 

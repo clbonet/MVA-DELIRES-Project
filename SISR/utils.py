@@ -12,6 +12,9 @@ from keras.optimizers import SGD, Adam
 from keras import backend as K
 
 def subsample(IMG_NAME):
+    """
+        Subsample by 2 IMG_NAME
+    """
     img = cv2.imread(IMG_NAME, cv2.IMREAD_COLOR)
     img = cv2.cvtColor(img, cv2.COLOR_BGR2YCrCb) ## BGR to YcrCb
     shape = img.shape

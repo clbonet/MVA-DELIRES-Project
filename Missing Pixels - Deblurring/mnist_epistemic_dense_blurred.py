@@ -42,8 +42,6 @@ class autoencoder():
         # Build and compile the autoencoder
         self.ae = self.build_ae()
         self.ae.summary()
-        #binary cross-entropy loss, because mnist is grey-scale
-        #you can try out the mse loss as well if you like
         self.ae.compile(optimizer=optimizer, loss='mse')
 
     def build_ae(self):
@@ -51,9 +49,6 @@ class autoencoder():
         n_pixels = self.img_rows*self.img_cols*self.img_channels
 
         if (self.architecture == 'mlp'):
-            # FULLY CONNECTED (MLP)
-
-            #BEGIN INSERT CODE
             #encoder
             input_img = Input(shape=(self.img_rows,self.img_cols,self.img_channels))
             x_flatten = Flatten()(input_img)
@@ -68,32 +63,6 @@ class autoencoder():
             z = Dense(512,activation=LeakyReLU(0.2))(z)
             z = Dropout(0.2)(z,training=True)
             output_img = Reshape((self.img_rows,self.img_cols,1))(Dense(784,activation='sigmoid')(z))
-
-            #END INSERT CODE
-        elif(self.architecture == 'convolutional'):
-            # CONVOLUTIONAL MODEL
-
-            #BEGIN INSERT CODE
-            input_img = Input(shape=(self.img_rows,self.img_cols,self.img_channels))
-            #encoder
-            z = Conv2D(filters=16,kernel_size=(3,3),strides=(2,2),padding='same',activation=LeakyReLU(0.2))(input_img)
-            # z = Dropout(0.2)(z,training=True) # https://github.com/keras-team/keras/issues/9412
-            z = Conv2D(filters=8,kernel_size=(3,3),strides=(2,2),padding='same',activation=LeakyReLU(0.2))(z)
-            # z = Dropout(0.2)(z,training=True)
-            z = Conv2D(filters=4,kernel_size=(3,3),strides=(2,2),padding='same',activation=LeakyReLU(0.2))(z)
-            z = Flatten()(z)
-            z = Dense(self.z_dim)(z)
-            # z = Dropout(0.2)(z,training=True)
-            #decoder
-            z = Dense(392,activation=LeakyReLU(0.2))(z)
-            # z = Dropout(0.2)(z,training=True)
-            z = Reshape((7,7,8))(z)
-            z = Conv2DTranspose(filters=16,kernel_size=(3,3),strides=(2,2),padding='same',activation=LeakyReLU(0.2))(z)
-            # z = Dropout(0.2)(z,training=True)
-            output_img = Conv2DTranspose(filters=1,kernel_size=(3,3),strides=(2,2),padding='same',activation='sigmoid')(z)
-            output_img = Dropout(0.2)(output_img)
-            #END INSERTs CODE
-            
 
         #output the model
         return Model(input_img, output_img)
@@ -123,13 +92,7 @@ class autoencoder():
         #load dataset
         X_train,X_test = self.load_data(self.dataset_name)
 
-        sigma = 20.0/255.0 # 40.0/255.0
-
         for i in range(0,epochs):
-
-            # ---------------------
-            #  Autoencoder
-            # ---------------------
 
             # Select a random batch of images
             idx = np.random.randint(0, X_train.shape[0], batch_size)
@@ -139,7 +102,6 @@ class autoencoder():
             curr_batch_blurred = np.zeros(curr_batch.shape)
             for ind,img in enumerate(curr_batch):
                 curr_batch_blurred[ind] = image_blur(img).reshape(self.img_rows,self.img_cols,1)
-
 
             loss = self.ae.train_on_batch(curr_batch_blurred,curr_batch)
 
@@ -157,7 +119,7 @@ class autoencoder():
 
     def test_images(self, test_imgs, image_filename):
         n_images = test_imgs.shape[0]
-        #get output imagesq
+        #get output images
         curr_batch_blurred = np.zeros(test_imgs.shape)
         for ind,img in enumerate(test_imgs):
             curr_batch_blurred[ind] = image_blur(img).reshape(self.img_rows,self.img_cols,1)
@@ -178,6 +140,9 @@ class autoencoder():
         plt.close()
         
     def test(self,n_img=5):
+        """
+            Epistemic Uncertainty on n_img images
+        """
         imgs = self.load_data(self.dataset_name)[1][:n_img]
         curr_batch_blurred = np.zeros(imgs.shape)
         for ind,img in enumerate(imgs):
@@ -190,6 +155,7 @@ class autoencoder():
         var = np.zeros((n_img,self.img_rows,self.img_cols))
         Ey = np.zeros((n_img,self.img_rows,self.img_cols))
 
+        ## Compute the predictive variance
         for t in range(T):
             output_imgs = self.ae.predict(curr_batch_blurred.reshape(n_img,self.img_rows,self.img_cols,1)).reshape(n_img,self.img_rows,self.img_cols)
             var += output_imgs**2 /T
@@ -197,6 +163,7 @@ class autoencoder():
 
         var -= Ey**2
 
+        ## show images
         if n_img>=2:
             for i in range(n_img):
                 # print(var[i].mean(),var[i].mean()**(1/2))
@@ -239,10 +206,9 @@ if __name__ == '__main__':
 
     #choose dataset
     dataset_name = 'mnist'
-    # dataset_name = 'cifar'
 
     #create AE model
-    architecture = 'mlp' #'convolutional'
+    architecture = 'mlp'
 
     ae = autoencoder(dataset_name,architecture)
 

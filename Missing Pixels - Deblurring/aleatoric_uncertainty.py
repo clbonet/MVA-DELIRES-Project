@@ -93,23 +93,11 @@ class autoencoder():
         #load dataset
         X_train,X_test = self.load_data(self.dataset_name)
 
-        sigma = 20.0/255.0 # 40.0/255.0
-
         for i in range(0,epochs):
-
-            # ---------------------
-            #  Autoencoder
-            # ---------------------
 
             # Select a random batch of images
             idx = np.random.randint(0, X_train.shape[0], batch_size)
             curr_batch = X_train[idx,:,:,:]
-            # Autoencoder training
-            
-            ## Denoising Autoencoder (add noise on the input)
-            noise = np.random.randn(curr_batch.shape[0],curr_batch.shape[1],curr_batch.shape[2],curr_batch.shape[3])*sigma
-            
-            # curr_batch_masked = curr_batch*np.random.randint(2,size=curr_batch.shape)
             curr_batch_masked = curr_batch*np.random.binomial(1,0.75,size=curr_batch.shape)
     
             loss = self.ae.train_on_batch(curr_batch_masked,curr_batch)
@@ -128,7 +116,7 @@ class autoencoder():
 
     def test_images(self, test_imgs, image_filename):
         n_images = test_imgs.shape[0]
-        #get output imagesq
+        #get output images
         masked_imgs = test_imgs * np.random.binomial(1,0.75,size=test_imgs.shape)
         output_imgs = self.ae.predict(masked_imgs)
         
@@ -157,10 +145,9 @@ if __name__ == '__main__':
 
     #choose dataset
     dataset_name = 'mnist'
-    # dataset_name = 'cifar'
 
     #create AE model
-    architecture = 'mlp' #'convolutional'
+    architecture = 'mlp'
 
     ae = autoencoder(dataset_name,architecture)
 
