@@ -30,14 +30,12 @@ class NN():
         x = Conv2D(filters=128,kernel_size=(9,9),kernel_initializer="glorot_uniform",
                    activation="relu",padding="valid",use_bias=True#, kernel_regularizer=regularizers.l2(0.001)
                    )(input_img)
-        x = Dropout(0.2)(x,training=True)
         noise = Conv2D(filters=64, kernel_size=(3,3), kernel_initializer='glorot_uniform',
                    activation='relu', padding='same',use_bias=True#,kernel_regularizer=regularizers.l2(0.001)
                    )(x)
         x = Conv2D(filters=64, kernel_size=(3,3), kernel_initializer='glorot_uniform',
                    activation='relu', padding='same',use_bias=True#,kernel_regularizer=regularizers.l2(0.001)
                    )(x)
-        x = Dropout(0.2)(x,training=True)
         output_img = Conv2D(filters=1, kernel_size=(5,5), kernel_initializer='glorot_uniform',
                      activation='linear',padding='valid',use_bias=True#,kernel_regularizer=regularizers.l2(0.001)
                      )(x)
@@ -70,8 +68,8 @@ class NN():
         self.nn_train.fit(data, label, batch_size=batch_size, validation_data=(val_data, val_label),
                         callbacks=callbacks_list, shuffle=True, epochs=self.epochs) #, verbose=0)
 
-        self.nn_train.save_weights("srcnn_dropout.h5")
-
+        self.nn_train.save_weights("srcnn_aleatoric.h5")
+        
     def test_img(self,img_name="./Test/Set14/flowers.bmp",load_weights=None):
         """
             Apply the model on img_name
@@ -88,78 +86,23 @@ class NN():
 
         img,Y_img = subsample(img_name)
 
-        fig,ax = plt.subplots(1,2,figsize=(20,20))
+        fig,ax = plt.subplots(2,2,figsize=(20,20))
 
-        ax[0].imshow(img)
+        ax[0,0].imshow(plt.imread(img_name))
+        ax[0,0].set_title("original")
 
-        img_x2 = predict(img,Y_img,srcnn_model)
-
-        ax[1].imshow(img_x2)
-        plt.show()
-
-
-    def test_combined(self,img_name="./Test/Set14/flowers.bmp",load_weights=None):
-        """
-            Combined uncertainty on img_name
-
-            Can load some weights if load_weights != None 
-            (load_weights='./models/srcnn_epistemic') for example
-        """
-        self.noiseModel = Model(inputs=self.nn_test.input,outputs=self.model_out.get_layer("noise").output)
-        
-        srcnn_model = self.nn_test
-        
-        if load_weights:
-            srcnn_model.load_weights(load_weights)
-        else:
-            srcnn_model.set_weights(self.nn_train.get_weights())
-            
-        img,Y_img = subsample(img_name)
-
-        fig,ax = plt.subplots(1,3,figsize=(20,20))
-
-        ax[0].imshow(img)
-        ax[0].set_title("original")
+        ax[0,1].imshow(img)
+        ax[0,1].set_title("degraded")
 
         img_x2 = predict(img,Y_img,srcnn_model)
 
-        ax[1].imshow(img_x2)
-        ax[1].set_title("x2")
-        
-        T = 30
-        var = np.zeros(img.shape)
-        Ey = np.zeros(img.shape)
-        ## Compute predictive variance
-        for k in range(T):       
-            img_pred = predict(img,Y_img,srcnn_model)
-            
-            var += (img_pred/255)**2/T
-            Ey += img_pred/(T*255)
+        ax[1,0].imshow(plt.imread(img_name))
+        ax[1,0].set_title("original")
 
-            img_noise = predict(img,Y_img,self.noiseModel)
-            
-            var += np.exp(img_noise/255)/T
-            
-        var -= Ey**2
-        
-        cb = ax[2].imshow(var[:,:,0]+var[:,:,1]+var[:,:,2],"jet")
-        ax[2].set_title("combined uncertainty")
-        fig.colorbar(cb,ax=ax,shrink=0.2,location="right")
-        fig.savefig("./dropout")
+        ax[1,1].imshow(img_x2)
+        ax[1,1].set_title("x2")
         plt.show()
-                
-        fig,ax = plt.subplots(1,3,figsize=(20,20))
-        ax[0].imshow(var[:,:,0],"jet")
-        ax[0].set_title("r")
-        ax[1].imshow(var[:,:,1],"jet")
-        ax[1].set_title("g")
-        cb = ax[2].imshow(var[:,:,2],"jet")
-        ax[2].set_title("b")
-        
-        fig.colorbar(cb,ax=ax,shrink=0.2,location="right")
-        
-        fig.savefig("./var-rgb")
-        plt.show()
+
 
     def test_aleatoric(self,img_name="./Test/Set14/flowers.bmp",load_weights=None):
         """
@@ -220,9 +163,7 @@ if __name__ == "__main__":
         model.train()
         model.test_img()
         model.test_aleatoric()
-        model.test_epistemic()
     else:
         model.test_img(load_weights=True)
         model.test_aleatoric(load_weights=True)
-        model.test_epistemic(load_weights=True)
 

@@ -72,15 +72,21 @@ class NN():
 
         img,Y_img = subsample(img_name)
 
-        fig,ax = plt.subplots(1,2,figsize=(20,20))
+        fig,ax = plt.subplots(2,2,figsize=(20,20))
 
-        ax[0].imshow(img)
-        ax[0].set_title("original")
+        ax[0,0].imshow(plt.imread(img_name))
+        ax[0,0].set_title("original")
+
+        ax[0,1].imshow(img)
+        ax[0,1].set_title("degraded")
 
         img_x2 = predict(img,Y_img,srcnn_model)
 
-        ax[1].imshow(img_x2)
-        ax[1].set_title("x2")
+        ax[1,0].imshow(plt.imread(img_name))
+        ax[1,0].set_title("original")
+
+        ax[1,1].imshow(img_x2)
+        ax[1,1].set_title("x2")
         plt.show()
 
     def test_epistemic(self,img_name="./Test/Set14/flowers.bmp",load_weights=None):

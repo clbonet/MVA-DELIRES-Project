@@ -162,7 +162,7 @@ class autoencoder():
             output_imgs = self.ae.predict(masked_imgs.reshape(n_img,self.img_rows,self.img_cols,1)).reshape(n_img,self.img_rows,self.img_cols)
             output_noise = self.noiseModel.predict(masked_imgs.reshape(n_img,self.img_rows,self.img_cols,1)).reshape(n_img,self.img_rows,self.img_cols)
             var += output_imgs**2 /T
-            var += K.exp(output_noise)/T
+            var += np.exp(output_noise)/T
             Ey += output_imgs /T
 
         var -= Ey**2
