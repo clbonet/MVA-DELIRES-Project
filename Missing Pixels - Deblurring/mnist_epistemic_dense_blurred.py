@@ -162,6 +162,7 @@ class autoencoder():
             Ey += output_imgs /T
 
         var -= Ey**2
+        var += 1
 
         ## show images
         if n_img>=2:

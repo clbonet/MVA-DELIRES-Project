@@ -147,6 +147,7 @@ class autoencoder():
             Ey += output_imgs /T
 
         var -= Ey**2
+        var += 1
 
         ## show images
         if n_img>=2:
@@ -179,7 +180,121 @@ class autoencoder():
 
         fig.savefig("./images/results")
         plt.show()
+
+    def test_MP(self,n_img=5):
+        """
+            Epistemic Uncertainty on n_img images on missing pixels
+        """
+        imgs = self.load_data(self.dataset_name)[1][:n_img]
+        mask = np.random.binomial(1,0.75,size=imgs.shape)
+        masked_imgs = imgs*mask
+        output_imgs = self.ae.predict(masked_imgs.reshape(n_img,self.img_rows,self.img_cols,1))
+
+        fig, axes = plt.subplots(nrows=n_img,ncols=4,figsize=(15,15))
+
+        T = 30
+        var = np.zeros((n_img,self.img_rows,self.img_cols))
+        Ey = np.zeros((n_img,self.img_rows,self.img_cols))
+
+        ## Compute Predictive Variance
+        for t in range(T):
+            output_imgs = self.ae.predict(masked_imgs.reshape(n_img,self.img_rows,self.img_cols,1))
+            var_imgs = (output_imgs*(1-mask)).reshape(n_img,self.img_rows,self.img_cols)
+            var += var_imgs**2 /T
+            Ey += var_imgs /T
+
+        var -= Ey**2
+        var += 1
+
+        ## show images
+        if n_img>=2:
+            for i in range(n_img):
+                # print(var[i].mean(),var[i].mean()**(1/2))
+                axes[i,0].imshow(imgs[i].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
+                if i==0:
+                    axes[i,0].set_title("image")
+                axes[i,1].imshow(masked_imgs[i].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
+                if i==0:
+                    axes[i,1].set_title("masked")
+                axes[i,2].imshow(output_imgs[i].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
+                if i==0:
+                    axes[i,2].set_title("reconstructed")
+                cb = axes[i,3].imshow(var[i],'jet')
+                if i==0:
+                    axes[i,3].set_title("epistemic on missing pixels")
+            fig.colorbar(cb,ax=axes[:,3],location="right")
+                
+        else:
+            axes[0].imshow(imgs[0].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
+            axes[0].set_title("image")
+            axes[1].imshow(masked_imgs[0].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
+            axes[1].set_title("masked")
+            axes[2].imshow(output_imgs[0].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
+            axes[2].set_title("reconstructed")
+            cb = axes[3].imshow(var[0],'jet')
+            axes[3].set_title("epistemic on missing pixels")
+            fig.colorbar(cb,ax=axes,shrink=0.2,location="right")
+
+        fig.savefig("./images/results")
+        plt.show()
         
+
+    def test_MP2(self,n_img=5):
+        """
+            Epistemic Uncertainty on n_img images on groundtruth pixels
+        """
+        imgs = self.load_data(self.dataset_name)[1][:n_img]
+        mask = np.random.binomial(1,0.75,size=imgs.shape)
+        masked_imgs = imgs*mask
+        output_imgs = self.ae.predict(masked_imgs.reshape(n_img,self.img_rows,self.img_cols,1))
+
+        fig, axes = plt.subplots(nrows=n_img,ncols=4,figsize=(15,15))
+
+        T = 30
+        var = np.zeros((n_img,self.img_rows,self.img_cols))
+        Ey = np.zeros((n_img,self.img_rows,self.img_cols))
+
+        ## Compute Predictive Variance
+        for t in range(T):
+            output_imgs = self.ae.predict(masked_imgs.reshape(n_img,self.img_rows,self.img_cols,1))
+            var_imgs = (output_imgs*mask).reshape(n_img,self.img_rows,self.img_cols)
+            var += var_imgs**2 /T
+            Ey += var_imgs /T
+
+        var -= Ey**2
+        var += 1
+
+        ## show images
+        if n_img>=2:
+            for i in range(n_img):
+                # print(var[i].mean(),var[i].mean()**(1/2))
+                axes[i,0].imshow(imgs[i].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
+                if i==0:
+                    axes[i,0].set_title("image")
+                axes[i,1].imshow(masked_imgs[i].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
+                if i==0:
+                    axes[i,1].set_title("masked")
+                axes[i,2].imshow(output_imgs[i].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
+                if i==0:
+                    axes[i,2].set_title("reconstructed")
+                cb = axes[i,3].imshow(var[i],'jet')
+                if i==0:
+                    axes[i,3].set_title("epistemic on not removed pixels")
+            fig.colorbar(cb,ax=axes[:,3],location="right")
+                
+        else:
+            axes[0].imshow(imgs[0].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
+            axes[0].set_title("image")
+            axes[1].imshow(masked_imgs[0].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
+            axes[1].set_title("masked")
+            axes[2].imshow(output_imgs[0].reshape(self.img_rows,self.img_cols),'gray',vmin=0,vmax=1)
+            axes[2].set_title("reconstructed")
+            cb = axes[3].imshow(var[0],'jet')
+            axes[3].set_title("epistemic on not removed pixels")
+            fig.colorbar(cb,ax=axes,shrink=0.2,location="right")
+
+        fig.savefig("./images/results")
+        plt.show()
         
         
 
